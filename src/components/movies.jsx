@@ -1,25 +1,25 @@
 import React, { Component } from "react";
-import Like from "./common/like";
+import MovieTable from './movieTable.jsx';
 import ListGroup from "./common/listGroup";
 import Pagination from "./common/pagination";
 import { getMovies } from "../services/fakeMovieService";
 import { getGenres } from "../services/fakeGenreService";
 import { paginate } from '../utils/paginate';
+import _ from 'lodash';
 
 class Movies extends Component{
     state = {
         movies : [],
         genres : [],
         moviesPerPageCount : 4,
-        moviesPerPage : [],
         activePage: 1,
-        selectedGenre: {}
+        sortColumn: { path: 'title', order: 'asc'}
     };
 
     componentDidMount() {
         // this.handlePage(this.state.activePage);
 
-        const genres = [{ name:"All Genres"}, ...getGenres()];
+        const genres = [{_id:"", name:"All Genres"}, ...getGenres()];
         this.setState({ movies:getMovies(), genres });
     }
 
@@ -51,9 +51,13 @@ class Movies extends Component{
         this.setState({selectedGenre : genre, activePage: 1});        
     }
 
+    handleSort = sortColumn => {
+        this.setState({ sortColumn });
+    }
+
     render(){
         const { length: count }= this.state.movies;
-        const { moviesPerPageCount, activePage, selectedGenre, movies: allMovies} = this.state;
+        const { moviesPerPageCount, activePage, selectedGenre, movies: allMovies, sortColumn} = this.state;
 
         if(count === 0)
             return <p>There are no movies in the database.</p>;
@@ -61,7 +65,8 @@ class Movies extends Component{
         const filtered = selectedGenre && selectedGenre._id 
                 ? allMovies.filter(movie => movie.genre._id === selectedGenre._id) 
                 : allMovies;
-        const movies = paginate(filtered, activePage, moviesPerPageCount);
+        const sorted = _.orderBy(filtered, [sortColumn.path], [sortColumn.order]);     
+        const movies = paginate(sorted, activePage, moviesPerPageCount);
         
         return (                       
             <React.Fragment>
@@ -76,35 +81,12 @@ class Movies extends Component{
                     </div>
                     <div className="col">
                         <p>Showing { filtered.length } movies in the database</p>
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Genre</th>
-                                    <th>Stock</th>
-                                    <th>Rate</th>
-                                    <th></th>
-                                    <th></th>                        
-                                </tr>
-                            </thead>
-                            <tbody>
-                                { movies.map(movie => 
-                                    <tr key = { movie._id }>
-                                        <td>{ movie.title }</td>
-                                        <td>{ movie.genre.name }</td>
-                                        <td>{ movie.numberInStock }</td>
-                                        <td>{ movie.dailyRentalRate }</td> 
-                                        <td><Like 
-                                                movies={movie}
-                                                onClick={() => this.handleLike(movie)}
-                                            />
-                                        </td>
-                                        <td><button onClick={ () => this.handleDelete(movie._id) } 
-                                            className="btn btn-danger" >Delete</button></td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                        <MovieTable 
+                            movies={movies} 
+                            sortColumn={sortColumn}
+                            onDelete={this.handleDelete} 
+                            onLike={this.handleLike}
+                            onSort={this.handleSort}/>
                         <Pagination 
                             moviesCount={filtered.length} 
                             numMoviesPerPage={moviesPerPageCount}
