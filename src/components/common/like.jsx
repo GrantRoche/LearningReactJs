@@ -2,11 +2,11 @@ import React, { Component } from 'react';
 
 class Like extends Component {
    render() { 
-        const {movies, onClick} = this.props;
+        const {liked, onClick} = this.props;
         
         return (  
             <i 
-                className={this.getStatus(movies.isLike)} 
+                className={this.getStatus(liked)} 
                 onClick={() => onClick()}
                 aria-hidden="true">
             </i>
