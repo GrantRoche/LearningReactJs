@@ -20,7 +20,8 @@ class Movies extends Component{
         // this.handlePage(this.state.activePage);
 
         const genres = [{_id:"", name:"All Genres"}, ...getGenres()];
-        this.setState({ movies:getMovies(), genres });
+        const movies = getMovies();
+        this.setState({ movies, genres });
     }
 
 
@@ -57,13 +58,13 @@ class Movies extends Component{
 
     getPageData = () => {
         const { moviesPerPageCount, activePage, selectedGenre, movies: allMovies, sortColumn} = this.state;
-
+        
         const filtered = selectedGenre && selectedGenre._id 
         ? allMovies.filter(movie => movie.genre._id === selectedGenre._id) 
         : allMovies;
-        const sorted = _.orderBy(filtered, [sortColumn.path], [sortColumn.order]);     
+        
+        const sorted = _.orderBy(filtered, [sortColumn.path], [sortColumn.order]);          
         const movies = paginate(sorted, activePage, moviesPerPageCount);
-
         return { totalCount: filtered.length, data: movies };
     }
 
